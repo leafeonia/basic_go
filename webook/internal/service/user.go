@@ -49,3 +49,11 @@ func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
 	// 然后就是，存起来
 	return svc.repo.Create(ctx, u)
 }
+
+func (svc *UserService) Edit(ctx context.Context, u domain.User) error {
+	return svc.repo.Edit(ctx, u)
+}
+
+func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
+	return svc.repo.GetProfile(ctx, id)
+}

@@ -11,6 +11,9 @@ type User struct {
 	Email    string
 	Password string
 	Ctime    time.Time
+	UserName string
+	Intro    string
+	Birthday time.Time
 }
 
 //type Address struct {

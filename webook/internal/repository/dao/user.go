@@ -30,6 +30,12 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
+func (dao *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
+	return u, err
+}
+
 func (dao *UserDAO) Insert(ctx context.Context, u User) error {
 	// 存毫秒数
 	now := time.Now().UnixMilli()
@@ -46,6 +52,11 @@ func (dao *UserDAO) Insert(ctx context.Context, u User) error {
 	return err
 }
 
+func (dao *UserDAO) Edit(ctx context.Context, u User) error {
+	u.Utime = time.Now().UnixMilli()
+	return dao.db.Where("Id = ?", u.Id).Updates(u).Error
+}
+
 // User 直接对应数据库表结构
 // 有些人叫做 entity，有些人叫做 model，有些人叫做 PO(persistent object)
 type User struct {
@@ -60,4 +71,8 @@ type User struct {
 	Ctime int64
 	// 更新时间，毫秒数
 	Utime int64
+
+	UserName string
+	Intro    string
+	Birthday int64
 }

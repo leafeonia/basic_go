@@ -1,12 +1,14 @@
 package web
 
 import (
+	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 // UserHandler 我准备在它上面定义跟用户有关的路由
@@ -133,9 +135,53 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 }
 
 func (u *UserHandler) Edit(ctx *gin.Context) {
+	type EditReq struct {
+		UserName string `json:"username"`
+		Birthday string `json:"birthday"`
+		Intro    string `json:"intro"`
+	}
 
+	var req EditReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	if len(req.Intro) > 100 {
+		ctx.String(http.StatusOK, "intro too long")
+		return
+	}
+
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		ctx.String(http.StatusOK, "invalid format")
+		return
+	}
+	sess := sessions.Default(ctx)
+	id := sess.Get("userId").(int64)
+	err = u.svc.Edit(ctx, domain.User{
+		Id:       id,
+		UserName: req.UserName,
+		Intro:    req.Intro,
+		Birthday: birthday,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, err.Error())
+	}
+
+	ctx.String(http.StatusOK, "edit successfully")
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "这是你的 Profile")
+
+	sess := sessions.Default(ctx)
+	id := sess.Get("userId").(int64)
+	user, err := u.svc.Profile(ctx, id)
+	if err != nil {
+		ctx.String(http.StatusOK, err.Error())
+		return
+	}
+
+	date := user.Birthday.Format("2006-01-02")
+	ret := fmt.Sprintf("username: %s, intro: %s, birthday: %s", user.UserName, user.Intro, date)
+	ctx.String(http.StatusOK, ret)
 }
